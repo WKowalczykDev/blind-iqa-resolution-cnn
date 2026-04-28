@@ -1,0 +1,8 @@
+# ignore obsidian directory
+/sprint_UMwTi/.obsidian/*
+
+# leave for future versioning inside obsidian
+!/sprint_UMwTi/.obsidian/app.json
+!/sprint_UMwTi/.obsidian/core-plugins.json
+!/sprint_UMwTi/.obsidian/hotkeys.json
+!/sprint_UMwTi/.obsidian/snippets/
