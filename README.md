@@ -7,6 +7,7 @@
 ```bash
 pipx install nbstripout
 nbstripout --install
+nbstripout --install --attributes .gitattributes
 ```
 
 > Wymaga `pipx`. Jeśli nie masz: `sudo apt install pipx`
