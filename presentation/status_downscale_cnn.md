@@ -168,7 +168,7 @@ Główne ograniczenie na dziś: czas przetwarzania i dostęp do GPU.
 Aktualna konfiguracja:
 
 - `5` par degradacji,
-- `3` skale: `2`, `4`, `8`,
+- `3` skale: `8`, `16`, `32`,
 - `5 x 3 = 15` próbek z jednego obrazu źródłowego.
 
 Dlatego:
@@ -211,7 +211,7 @@ Cel praktyczny: unikać płaskich fragmentów, które nie niosą widocznego śla
 
 # Warianty danych
 
-Każdy obraz źródłowy przechodzi przez pięć par wariantów dla trzech skal `x2`, `x4`, `x8`.
+Każdy obraz źródłowy przechodzi przez pięć par wariantów dla trzech skal `x8`, `x16`, `x32`.
 
 | Pair | Downscale | Upscale | Rola |
 |---:|---|---|---|
