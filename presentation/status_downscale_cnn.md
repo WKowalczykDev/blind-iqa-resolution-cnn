@@ -96,9 +96,9 @@ Zbudować lekki model CNN, który na podstawie samego obrazu `256x256` rozpoznaj
 | Stan | Znaczenie | Klasa |
 |---|---|---:|
 | `CTRL` | obraz kontrolny, bez degradacji | 0 |
-| `x8` | downscale z czynnikiem 8 | 1 |
-| `x16` | downscale z czynnikiem 16 | 2 |
-| `x32` | downscale z czynnikiem 32 | 3 |
+| `x8` | downscale z czynnikiem 2 | 1 |
+| `x16` | downscale z czynnikiem 4 | 2 |
+| `x32` | downscale z czynnikiem 8 | 3 |
 
 ---
 
@@ -111,17 +111,15 @@ _class: compact
 Inspiracja: **Blind Image Quality Assessment Using Convolutional Neural Networks**  
 M. Frackiewicz, H. Palus, W. Trojanowski, Politechnika Śląska.
 
-Autorzy pokazują, że prostszy CNN może być praktyczną alternatywą dla ciężkich metod BIQA, jeśli połączy się go z nowoczesną optymalizacją.
+CNN jako praktyczne rozwiązanie rozpoznawania jakości obrazów
 
 <div class="cols">
 <div>
 
 **Co bierzemy z pracy**
 
-- lekka architektura konwolucyjna,
-- lokalna normalizacja wejścia,
+- architektura modelu,
 - uczenie na patchach,
-- Optuna / optymalizacja bayesowska,
 - Adam jako optymalizator.
 
 </div>
@@ -131,13 +129,9 @@ Autorzy pokazują, że prostszy CNN może być praktyczną alternatywą dla cię
 
 - zamiast oceny jakości: klasyfikacja,
 - zamiast benchmarków TID2013/KADID-10k: próbki z RAISE,
-- zamiast regresji: softmax na `CTRL/x8/x16/x32`.
 
 </div>
 </div>
-
-<div class="note">Zachowujemy ideę: model ma być lekki, skalowalny i możliwy do trenowania bez bardzo rozbudowanej architektury.</div>
-
 ---
 
 # Dataset RAISE
@@ -174,7 +168,7 @@ Główne ograniczenie na dziś: czas przetwarzania i dostęp do GPU.
 Aktualna konfiguracja:
 
 - `5` par degradacji,
-- `3` skale: `8`, `16`, `32`,
+- `3` skale: `2`, `4`, `8`,
 - `5 x 3 = 15` próbek z jednego obrazu źródłowego.
 
 Dlatego:
@@ -217,7 +211,7 @@ Cel praktyczny: unikać płaskich fragmentów, które nie niosą widocznego śla
 
 # Warianty danych
 
-Każdy obraz źródłowy przechodzi przez pięć par wariantów dla trzech skal `x8`, `x16`, `x32`.
+Każdy obraz źródłowy przechodzi przez pięć par wariantów dla trzech skal `x2`, `x4`, `x8`.
 
 | Pair | Downscale | Upscale | Rola |
 |---:|---|---|---|
@@ -231,23 +225,7 @@ Etykieta klasy zależy od stanu/skali, nie od pary degradacji.
 
 ---
 
-# Manifest jako centrum projektu
-
-<div class="cols">
-<div>
-Pipeline zapisuje:
-
-```text
-1K_out/
-├── train/
-├── val/
-├── test/
-├── stress_test/
-├── manifest.jsonl
-├── splits.json
-└── pipeline_config.json
-```
-</div><div>
+# Manifest
 `manifest.jsonl` służy do odtworzenia:
 
 - pochodzenia próbki,
@@ -307,7 +285,6 @@ _class: compact
 - wejście: PNG `256x256x3`,
 - lokalna normalizacja `3x3`,
 - `tf.data` ładuje obrazy batchami,
-- ten sam duch: prosty CNN + nowoczesne strojenie.
 
 Główna zmiana: głowica nie przewiduje jakości obrazu, tylko stan downscalingu.
 
@@ -343,8 +320,6 @@ Problemy:
 - wolne generowanie danych dla większych batchy,
 - kosztowne modele ESRGAN,
 - limit czasu sesji,
-- ograniczona stabilność GPU,
-- długi trening z Optuną i walidacją.
 
 Wniosek: pełne przetwarzanie RAISE i docelowy trening wymagają mocniejszego serwera z GPU.
 
