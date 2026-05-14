@@ -132,6 +132,7 @@ CNN jako praktyczne rozwiązanie rozpoznawania jakości obrazów
 
 </div>
 </div>
+
 ---
 
 # Dataset RAISE
