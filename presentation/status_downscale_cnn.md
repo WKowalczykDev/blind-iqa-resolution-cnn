@@ -4,6 +4,77 @@ theme: default
 paginate: true
 ---
 
+<style>
+section {
+  font-size: 29px;
+}
+section.compact {
+  font-size: 22px;
+  padding: 46px 64px;
+}
+section.compact h1 {
+  font-size: 38px;
+  margin-bottom: 12px;
+}
+section.compact h2 {
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+section.code-slide {
+  padding: 46px 64px;
+}
+section.code-slide h1 {
+  font-size: 38px;
+  margin-bottom: 12px;
+}
+section.code-slide pre {
+  font-size: 0.56em;
+}
+section.compact ul {
+  margin-top: 6px;
+}
+section.compact li {
+  margin: 4px 0;
+}
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.note {
+  border-left: 5px solid #4f46e5;
+  font-size: 20px;
+  margin-top: 12px;
+  padding-left: 14px;
+}
+.mapping {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.mapping div {
+  border: 1px solid #d8dee9;
+  border-radius: 6px;
+  padding: 9px 10px;
+}
+.mapping b {
+  display: block;
+  font-size: 24px;
+}
+.mapping span {
+  display: block;
+  font-size: 18px;
+  margin-top: 4px;
+}
+table {
+  font-size: 0.86em;
+}
+pre {
+  font-size: 0.72em;
+}
+</style>
+
 <!--
 _class: lead
 -->
@@ -31,18 +102,41 @@ Zbudować lekki model CNN, który na podstawie samego obrazu `256x256` rozpoznaj
 
 ---
 
+<!--
+_class: compact
+-->
+
 # Kontekst naukowy
 
-Projekt jest inspirowany pracą o BIQA CNN:
+Inspiracja: **Blind Image Quality Assessment Using Convolutional Neural Networks**  
+M. Frackiewicz, H. Palus, W. Trojanowski, Politechnika Śląska.
+
+Autorzy pokazują, że prostszy CNN może być praktyczną alternatywą dla ciężkich metod BIQA, jeśli połączy się go z nowoczesną optymalizacją.
+
+<div class="cols">
+<div>
+
+**Co bierzemy z pracy**
 
 - lekka architektura konwolucyjna,
 - lokalna normalizacja wejścia,
-- strojenie hiperparametrów,
-- uczenie na patchach obrazu.
+- uczenie na patchach,
+- Optuna / optymalizacja bayesowska,
+- Adam jako optymalizator.
 
-Różnica względem klasycznego BIQA:
+</div>
+<div>
 
-**nie przewidujemy wyniku jakościowego**. Obecne zadanie to klasyfikacja stanu downscalingu: `CTRL`, `x8`, `x16`, `x32`.
+**Co zmieniamy**
+
+- zamiast oceny jakości: klasyfikacja,
+- zamiast benchmarków TID2013/KADID-10k: próbki z RAISE,
+- zamiast regresji: softmax na `CTRL/x8/x16/x32`.
+
+</div>
+</div>
+
+<div class="note">Zachowujemy ideę: model ma być lekki, skalowalny i możliwy do trenowania bez bardzo rozbudowanej architektury.</div>
 
 ---
 
@@ -139,6 +233,8 @@ Etykieta klasy zależy od stanu/skali, nie od pary degradacji.
 
 # Manifest jako centrum projektu
 
+<div class="cols">
+<div>
 Pipeline zapisuje:
 
 ```text
@@ -151,7 +247,7 @@ Pipeline zapisuje:
 ├── splits.json
 └── pipeline_config.json
 ```
-
+</div><div>
 `manifest.jsonl` służy do odtworzenia:
 
 - pochodzenia próbki,
@@ -160,8 +256,13 @@ Pipeline zapisuje:
 - skali downscalingu,
 - lokalizacji pliku PNG,
 - etykiety klasy dla modelu.
+</div></div>
 
 ---
+
+<!--
+_class: code-slide
+-->
 
 # Rekord manifestu
 
@@ -192,25 +293,44 @@ Pipeline zapisuje:
 
 ---
 
+<!--
+_class: compact
+-->
+
 # Model CNN
 
-Wejście:
+<div class="cols">
+<div>
 
-- obraz PNG `256x256x3`,
+## Adaptacja idei BIQA
+
+- wejście: PNG `256x256x3`,
 - lokalna normalizacja `3x3`,
-- batchowany pipeline `tf.data`.
+- `tf.data` ładuje obrazy batchami,
+- ten sam duch: prosty CNN + nowoczesne strojenie.
 
-Architektura:
+Główna zmiana: głowica nie przewiduje jakości obrazu, tylko stan downscalingu.
+
+</div>
+<div>
+
+## Architektura
 
 - bloki `Conv2D -> BatchNorm -> MaxPool`,
 - filtry: `32, 64, 128, 256, 256, 256`,
-- warstwa gęsta strojona hiperparametrycznie,
-- `Dropout`,
+- warstwa gęsta strojona przez Optunę,
+- `Dropout` i Adam,
 - `Dense(4, softmax)`.
 
-Wyjście: rozkład prawdopodobieństw dla `CTRL`, `x8`, `x16`, `x32`.
+</div>
+</div>
 
-Etykieta pochodzi z manifestu: `CTRL -> 0`, `scale_factor=8 -> 1`, `16 -> 2`, `32 -> 3`.
+<div class="mapping">
+<div><b>0</b><code>CTRL</code><span>brak degradacji</span></div>
+<div><b>1</b><code>scale=8</code><span>downscale x8</span></div>
+<div><b>2</b><code>scale=16</code><span>downscale x16</span></div>
+<div><b>3</b><code>scale=32</code><span>downscale x32</span></div>
+</div>
 
 ---
 
